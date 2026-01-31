@@ -228,6 +228,25 @@
     box-shadow: var(--shadow-glow);
 }
 
+/* Number input specific styles */
+input[type="number"].select__input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    padding-right: var(--space-3);
+    color: var(--color-text-primary);
+    background: var(--color-bg-card);
+}
+
+input[type="number"].select__input::-webkit-outer-spin-button,
+input[type="number"].select__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"].select__input::placeholder {
+    color: var(--color-text-muted);
+}
+
 .select__icon {
     position: absolute;
     right: var(--space-4);

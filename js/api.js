@@ -238,6 +238,7 @@ export const ElectedAPI = {
   /**
    * Advanced multi-criteria search
    * @param {Object} criteria - Search criteria
+   * Returns { elected: [], pagination: { limit, offset, total } }
    */
   async advancedSearch(criteria = {}) {
     const params = new URLSearchParams();
@@ -246,7 +247,19 @@ export const ElectedAPI = {
         params.append(key, value);
       }
     });
-    return apiFetch(`/api/elected/advanced-search?${params}`);
+
+    // Fetch directly to preserve pagination info
+    const response = await fetch(`${API_BASE}/api/elected/advanced-search?${params}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!response.ok) throw new Error('Advanced search failed');
+    const result = await response.json();
+
+    // Return with pagination info preserved
+    return {
+      elected: result.data || [],
+      pagination: result.pagination || { total: result.data?.length || 0 }
+    };
   },
 
   /**

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BREF Dashboard - Élus de France</title>
+  <meta name="description"
+    content="Dashboard interactif pour visualiser les données des élus français - statistiques, cartes, filtres avancés">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/charts.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Global Loader -->
+    <div id="global-loader" class="loader"
+      style="display: none; position: fixed; inset: 0; background: rgba(248,250,252,0.95); z-index: 9999;">
+      <div class="loader__spinner"></div>
+      <span class="loader__text">Chargement des données...</span>
+    </div>
+
+    <!-- Error Container -->
+    <div id="error-container" style="display: none;"></div>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header__inner">
+        <div class="header__brand">
+          <div>
+            <h1 class="header__title">BREF Dashboard</h1>
+            <p class="header__subtitle">Base des Représentants Élus de France</p>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="nav">
+          <a href="#overview" class="nav__link active">Vue d'ensemble</a>
+          <a href="#statistics" class="nav__link">Statistiques</a>
+          <a href="#map" class="nav__link">Carte</a>
+          <a href="#elected" class="nav__link">Élus</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <div class="main__inner">
+        <div class="dashboard-grid">
+
+          <!-- KPI Cards Row -->
+          <section class="kpi-row" id="overview">
+            <!-- Total Élus -->
+            <div class="kpi-card">
+              <div class="kpi-card__header">
+                <span class="kpi-card__label">Total Élus</span>
+                <div class="kpi-card__icon kpi-card__icon--blue">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-card__value" id="kpi-total">--</div>
+              <div class="kpi-card__change kpi-card__change--up">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+                <span>Élus actifs</span>
+              </div>
+            </div>
+
+            <!-- Hommes -->
+            <div class="kpi-card">
+              <div class="kpi-card__header">
+                <span class="kpi-card__label">Hommes</span>
+                <div class="kpi-card__icon kpi-card__icon--blue">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="5" />
+                    <path d="M20 21a8 8 0 0 0-16 0" />
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-card__value" id="kpi-men">--</div>
+              <div id="kpi-men-progress" class="progress progress--male" style="margin-top: var(--space-2);">
+                <div class="progress__bar" style="width: 60%;"></div>
+              </div>
+            </div>
+
+            <!-- Femmes -->
+            <div class="kpi-card">
+              <div class="kpi-card__header">
+                <span class="kpi-card__label">Femmes</span>
+                <div class="kpi-card__icon kpi-card__icon--pink">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="5" />
+                    <path d="M20 21a8 8 0 0 0-16 0" />
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-card__value" id="kpi-women">--</div>
+              <div id="kpi-women-progress" class="progress progress--female" style="margin-top: var(--space-2);">
+                <div class="progress__bar" style="width: 40%;"></div>
+              </div>
+            </div>
+
+            <!-- Âge Moyen -->
+            <div class="kpi-card">
+              <div class="kpi-card__header">
+                <span class="kpi-card__label">Âge Moyen</span>
+                <div class="kpi-card__icon kpi-card__icon--purple">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-card__value"><span id="kpi-avg-age">--</span> ans</div>
+              <div class="kpi-card__change">
+                <span style="color: var(--color-text-muted);">Tous mandats confondus</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Charts + Map Row -->
+          <section class="charts-map-row" id="statistics">
+            <!-- Charts Grid -->
+            <div class="charts-section">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <svg class="section-title__icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18" />
+                    <path d="m19 9-5 5-4-4-3 3" />
+                  </svg>
+                  Statistiques
+                </h2>
+                <div class="tabs">
+                  <button class="tabs__tab active" data-tab="charts">Graphiques</button>
+                  <button class="tabs__tab" data-tab="rankings">Rankings</button>
+                </div>
+              </div>
+
+              <div class="charts-grid">
+                <!-- Gender Chart -->
+                <div class="chart-card">
+                  <div class="chart-card__header">
+                    <h3 class="chart-card__title">
+                      <svg class="chart-card__title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                      </svg>
+                      Répartition par genre
+                    </h3>
+                  </div>
+                  <div class="chart-card__body">
+                    <canvas id="chart-gender" class="chart-canvas"></canvas>
+                  </div>
+                </div>
+
+                <!-- Age Chart -->
+                <div class="chart-card">
+                  <div class="chart-card__header">
+                    <h3 class="chart-card__title">
+                      <svg class="chart-card__title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="M3 9h18" />
+                        <path d="M9 21V9" />
+                      </svg>
+                      Distribution des âges
+                    </h3>
+                  </div>
+                  <div class="chart-card__body">
+                    <canvas id="chart-age" class="chart-canvas"></canvas>
+                  </div>
+                </div>
+
+                <!-- Nuances Chart -->
+                <div class="chart-card">
+                  <div class="chart-card__header">
+                    <h3 class="chart-card__title">
+                      <svg class="chart-card__title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M12 20V10" />
+                        <path d="M18 20V4" />
+                        <path d="M6 20v-4" />
+                      </svg>
+                      Nuances politiques
+                    </h3>
+                  </div>
+                  <div class="chart-card__body">
+                    <canvas id="chart-nuances" class="chart-canvas"></canvas>
+                  </div>
+                </div>
+
+                <!-- Mandates Chart -->
+                <div class="chart-card">
+                  <div class="chart-card__header">
+                    <h3 class="chart-card__title">
+                      <svg class="chart-card__title-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                        <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                      </svg>
+                      Types de mandats
+                    </h3>
+                  </div>
+                  <div class="chart-card__body">
+                    <canvas id="chart-mandates" class="chart-canvas"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="map-card" id="map-section">
+              <div class="map-card__header">
+                <h3 class="map-card__title">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                    <line x1="9" x2="9" y1="3" y2="18" />
+                    <line x1="15" x2="15" y1="6" y2="21" />
+                  </svg>
+                  Carte de France
+                </h3>
+                <div class="map-card__controls">
+                  <select id="map-metric" class="select__input"
+                    style="width: auto; padding: var(--space-2) var(--space-3); font-size: var(--text-xs);">
+                    <option value="density">Nombre d'élus</option>
+                    <option value="parity">Parité</option>
+                    <option value="age">Âge moyen</option>
+                  </select>
+                </div>
+              </div>
+              <div class="map-card__body">
+                <div id="map"></div>
+                <div id="map-legend"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Filters Panel -->
+          <section class="filters-panel full-width">
+            <div class="filters-panel__header">
+              <h3 class="filters-panel__title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+                Filtres avancés
+              </h3>
+              <button id="clear-filters" class="btn btn--ghost btn--sm">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
+                Réinitialiser
+              </button>
+            </div>
+
+            <div class="filters-panel__grid">
+              <!-- Department -->
+              <div class="filter-group">
+                <label class="filter-group__label" for="filter-department">Département</label>
+                <select id="filter-department" class="select__input">
+                  <option value="">Tous les départements</option>
+                </select>
+              </div>
+
+              <!-- Mandate Type -->
+              <div class="filter-group">
+                <label class="filter-group__label" for="filter-mandate">Type de mandat</label>
+                <select id="filter-mandate" class="select__input">
+                  <option value="">Tous les mandats</option>
+                </select>
+              </div>
+
+              <!-- Gender -->
+              <div class="filter-group">
+                <label class="filter-group__label" for="filter-gender">Genre</label>
+                <select id="filter-gender" class="select__input">
+                  <option value="">Tous</option>
+                  <option value="M">Homme</option>
+                  <option value="F">Femme</option>
+                </select>
+              </div>
+
+              <!-- Political Nuance -->
+              <div class="filter-group">
+                <label class="filter-group__label" for="filter-nuance">Nuance politique</label>
+                <select id="filter-nuance" class="select__input">
+                  <option value="">Toutes nuances</option>
+                </select>
+              </div>
+
+              <!-- Age Range -->
+              <div class="filter-group">
+                <label class="filter-group__label">Tranche d'âge</label>
+                <div style="display: flex; gap: var(--space-2);">
+                  <input type="number" id="filter-min-age" class="select__input" placeholder="Min" min="18" max="100"
+                    style="width: 80px;">
+                  <input type="number" id="filter-max-age" class="select__input" placeholder="Max" min="18" max="100"
+                    style="width: 80px;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Filters Tags -->
+            <div id="active-filters" class="active-filters" style="display: none;"></div>
+          </section>
+
+          <!-- Data Table Section -->
+          <section class="card full-width" id="elected">
+            <div class="card__header">
+              <h3 class="section-title">
+                <svg class="section-title__icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Liste des Élus
+              </h3>
+              <div style="display: flex; gap: var(--space-2);">
+                <button id="export-csv" class="btn btn--secondary btn--sm">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" x2="12" y1="15" y2="3" />
+                  </svg>
+                  Export CSV
+                </button>
+                <button id="export-json" class="btn btn--secondary btn--sm">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                  Export JSON
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty state (shown when no data) -->
+            <div id="table-empty" class="empty-state">
+              <svg class="empty-state__icon" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <circle cx="19" cy="11" r="3" />
+                <path d="m21.5 13.5-2-2-2 2" />
+              </svg>
+              <h4 class="empty-state__title">Aucun élu trouvé</h4>
+              <p class="empty-state__text">Modifiez vos filtres ou effectuez une recherche</p>
+            </div>
+
+            <!-- Table (hidden initially) -->
+            <div id="table-container" style="display: none; overflow-x: auto;">
+              <table class="data-table" id="elected-table">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Âge</th>
+                    <th>Mandat</th>
+                    <th>Nuance</th>
+                    <th>Lieu</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="elected-table-body">
+                  <!-- Rows will be inserted dynamically -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="pagination" style="display: none;">
+              <button class="pagination__btn" id="page-prev" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+              <span id="page-info" style="color: var(--color-text-secondary); font-size: var(--text-sm);">Page 1 /
+                1</span>
+              <button class="pagination__btn" id="page-next" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>
+        <strong>BREF Dashboard</strong> — Base des Représentants Élus de France
+        <br>
+        Données fournies par l'<a href="https://api.bref.chanutgirardi.com/api-docs" target="_blank">API BREF</a>
+        <br>
+        <small style="color: var(--color-text-muted);">Projet de doctorat en Sciences de l'Information</small>
+      </p>
+    </footer>
+  </div>
+
+  <!-- Main JS (ES Module) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

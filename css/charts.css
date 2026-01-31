@@ -1,0 +1,346 @@
+/* ============================================
+   BREF Dashboard - Chart & Map Styles
+   ============================================ */
+
+/* === Chart Container === */
+.chart-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+}
+
+.chart-card__title {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.chart-card__title-icon {
+    color: var(--color-accent-primary);
+}
+
+.chart-card__actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.chart-card__body {
+    flex: 1;
+    min-height: 250px;
+    position: relative;
+}
+
+.chart-card__footer {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+/* === Chart Canvas === */
+.chart-canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* === Legend Custom === */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    justify-content: center;
+    margin-top: var(--space-4);
+}
+
+.chart-legend__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+.chart-legend__color {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-sm);
+}
+
+/* === Map Container === */
+.map-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    min-height: 450px;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.map-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.map-card__title {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.map-card__controls {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.map-card__body {
+    flex: 1;
+    position: relative;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg-secondary);
+}
+
+/* === Leaflet Overrides === */
+.leaflet-container {
+    background: var(--color-bg-secondary);
+    font-family: var(--font-family);
+    z-index: 1 !important;
+}
+
+.leaflet-popup-content-wrapper {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+}
+
+.leaflet-popup-content {
+    margin: var(--space-4);
+    color: var(--color-text-primary);
+}
+
+.leaflet-popup-tip {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+}
+
+.leaflet-control-zoom {
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-lg) !important;
+    overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+    background: var(--color-bg-card) !important;
+    color: var(--color-text-primary) !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: var(--color-bg-hover) !important;
+    color: var(--color-accent-primary) !important;
+}
+
+.leaflet-control-zoom a:last-child {
+    border-bottom: none !important;
+}
+
+/* === Map Tooltip === */
+.map-tooltip {
+    padding: var(--space-3);
+    min-width: 180px;
+}
+
+.map-tooltip__title {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    margin-bottom: var(--space-2);
+    color: var(--color-text-primary);
+}
+
+.map-tooltip__stat {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-1) 0;
+    font-size: var(--text-sm);
+}
+
+.map-tooltip__label {
+    color: var(--color-text-secondary);
+}
+
+.map-tooltip__value {
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+}
+
+/* === Map Legend === */
+.map-legend {
+    position: absolute;
+    bottom: var(--space-4);
+    right: var(--space-4);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    z-index: 1000;
+}
+
+.map-legend__title {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    margin-bottom: var(--space-2);
+    color: var(--color-text-primary);
+}
+
+.map-legend__scale {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.map-legend__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.map-legend__color {
+    width: 20px;
+    height: 12px;
+    border-radius: var(--radius-sm);
+}
+
+/* === Stats Grid Inside Charts === */
+.stats-mini {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+}
+
+.stats-mini__item {
+    text-align: center;
+    padding: var(--space-3);
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.stats-mini__value {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
+}
+
+.stats-mini__label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--space-1);
+}
+
+/* === Filter Panel === */
+.filters-panel {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+}
+
+.filters-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+}
+
+.filters-panel__title {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.filters-panel__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.filter-group__label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+}
+
+/* === Active Filters Tags === */
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    background: rgba(67, 97, 238, 0.15);
+    border: 1px solid rgba(67, 97, 238, 0.3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    color: var(--color-accent-primary);
+}
+
+.filter-tag__remove {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(67, 97, 238, 0.2);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.filter-tag__remove:hover {
+    background: rgba(67, 97, 238, 0.4);
+}

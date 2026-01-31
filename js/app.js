@@ -552,8 +552,8 @@ async function loadElectedTable(filters = {}) {
 
         // Handle different response formats
         const elected = Array.isArray(results) ? results : results.elected || results.data || [];
-        // Get total from pagination info
-        totalResults = results.pagination?.total || results.total || 500000;
+        // Get total from pagination info - use actual results length as minimum fallback
+        totalResults = results.pagination?.total || results.total || elected.length;
 
         if (elected.length === 0) {
             tableContainer.style.display = 'none';
@@ -628,6 +628,12 @@ function updatePagination() {
  * Change to a different page
  */
 async function changePage(newPage) {
+    const totalPages = Math.ceil(totalResults / pageSize) || 1;
+
+    // Clamp page to valid range
+    if (newPage < 1) newPage = 1;
+    if (newPage > totalPages) newPage = totalPages;
+
     currentPage = newPage;
     currentFilters.offset = (currentPage - 1) * pageSize;
     await loadElectedTable(currentFilters);

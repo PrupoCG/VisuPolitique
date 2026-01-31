@@ -131,6 +131,13 @@ export const StatsAPI = {
    */
   async getHeatMapData() {
     return apiFetch('/api/stats/heat-map');
+  },
+
+  /**
+   * Get political map data with dominant nuance per department
+   */
+  async getPoliticalMapData() {
+    return apiFetch('/api/stats/political-map');
   }
 };
 

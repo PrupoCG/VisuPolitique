@@ -348,6 +348,40 @@ async function initializeMap() {
             console.warn('Could not load heat-map stats for map:', e);
         }
 
+        // Load political nuance data
+        let politicalLegend = {};
+        try {
+            const politicalData = await StatsAPI.getPoliticalMapData();
+
+            // Store color legend for later use
+            politicalLegend = politicalData.colorLegend || {};
+
+            // Add nuance data to departmentData
+            if (Array.isArray(politicalData.data)) {
+                politicalData.data.forEach(dept => {
+                    if (departmentData[dept.departmentCode]) {
+                        departmentData[dept.departmentCode].nuance = dept.dominantNuance;
+                        departmentData[dept.departmentCode].nuanceColor = dept.color;
+                        departmentData[dept.departmentCode].nuancePercent = dept.percentage;
+                        departmentData[dept.departmentCode].top5Nuances = dept.top5Nuances;
+                    } else {
+                        departmentData[dept.departmentCode] = {
+                            nuance: dept.dominantNuance,
+                            nuanceColor: dept.color,
+                            nuancePercent: dept.percentage,
+                            top5Nuances: dept.top5Nuances
+                        };
+                    }
+                });
+            }
+            console.log('Loaded political-map data for map');
+
+            // Store political legend globally for legend rendering
+            window.politicalLegend = politicalLegend;
+        } catch (e) {
+            console.warn('Could not load political-map stats for map:', e);
+        }
+
         // Load GeoJSON with department data
         await loadFranceGeoJSON(departmentData);
 

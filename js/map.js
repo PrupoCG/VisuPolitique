@@ -134,18 +134,23 @@ function getFeatureStyle(feature, dataByDepartment) {
     let fillColor = '#dbeafe'; // Default light blue
 
     if (data) {
-        // Map metric names to data property names
-        let value;
-        if (currentMetric === 'density') {
-            value = data.total || 0;
-        } else if (currentMetric === 'parity') {
-            value = data.parity || 0;
-        } else if (currentMetric === 'age') {
-            value = data.avgAge || 55;
+        // Handle nuance metric specially - use color from API
+        if (currentMetric === 'nuance') {
+            fillColor = data.nuanceColor || '#888888';
         } else {
-            value = data.total || 0;
+            // Map metric names to data property names
+            let value;
+            if (currentMetric === 'density') {
+                value = data.total || 0;
+            } else if (currentMetric === 'parity') {
+                value = data.parity || 0;
+            } else if (currentMetric === 'age') {
+                value = data.avgAge || 55;
+            } else {
+                value = data.total || 0;
+            }
+            fillColor = getColorForValue(value, currentMetric);
         }
-        fillColor = getColorForValue(value, currentMetric);
     }
 
     return {
@@ -197,6 +202,8 @@ function createTooltipContent(name, code, data) {
     const total = data.total || 0;
     const parity = data.parity || data.parityPercent || 0;
     const avgAge = data.avgAge || data.averageAge || 0;
+    const nuance = data.nuance || '';
+    const nuancePercent = data.nuancePercent || 0;
 
     return `
     <div class="map-tooltip">
@@ -208,13 +215,19 @@ function createTooltipContent(name, code, data) {
       ${parity ? `
       <div class="map-tooltip__stat">
         <span class="map-tooltip__label">Parité</span>
-        <span class="map-tooltip__value">${parity.toFixed(1)}%</span>
+        <span class="map-tooltip__value">${parity.toFixed ? parity.toFixed(1) : parity}%</span>
       </div>
       ` : ''}
       ${avgAge ? `
       <div class="map-tooltip__stat">
         <span class="map-tooltip__label">Âge moyen</span>
-        <span class="map-tooltip__value">${avgAge.toFixed(1)} ans</span>
+        <span class="map-tooltip__value">${avgAge.toFixed ? avgAge.toFixed(1) : avgAge} ans</span>
+      </div>
+      ` : ''}
+      ${nuance ? `
+      <div class="map-tooltip__stat">
+        <span class="map-tooltip__label">Nuance dominante</span>
+        <span class="map-tooltip__value" style="color: ${data.nuanceColor || '#333'}">${nuance} (${nuancePercent}%)</span>
       </div>
       ` : ''}
     </div>
@@ -305,6 +318,53 @@ export function getMap() {
  * Create map legend
  */
 export function createMapLegend(metric = 'density') {
+    // Special handling for nuance metric
+    if (metric === 'nuance') {
+        const legend = window.politicalLegend || {};
+        // Show main nuances (most common ones)
+        const mainNuances = ['DVD', 'DVG', 'DIV', 'SOC', 'UMP', 'LR', 'COM', 'REM', 'RN', 'VEC'];
+        const legendItems = mainNuances
+            .filter(n => legend[n])
+            .map(n => ({ name: n, color: legend[n] }));
+
+        if (legendItems.length === 0) {
+            // Fallback if no legend available
+            return `
+            <div class="map-legend">
+              <div class="map-legend__title">Nuance dominante</div>
+              <div class="map-legend__scale">
+                <div class="map-legend__item">
+                  <span class="map-legend__color" style="background: #0088CC"></span>
+                  <span>Droite</span>
+                </div>
+                <div class="map-legend__item">
+                  <span class="map-legend__color" style="background: #FF6699"></span>
+                  <span>Gauche</span>
+                </div>
+                <div class="map-legend__item">
+                  <span class="map-legend__color" style="background: #888888"></span>
+                  <span>Divers</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+        <div class="map-legend">
+          <div class="map-legend__title">Nuance dominante</div>
+          <div class="map-legend__scale" style="flex-wrap: wrap;">
+            ${legendItems.map(item => `
+              <div class="map-legend__item">
+                <span class="map-legend__color" style="background: ${item.color}"></span>
+                <span>${item.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     const scale = COLOR_SCALES[metric] || COLOR_SCALES.density;
     const labels = {
         density: ['< 2K', '2K-4K', '4K-6K', '6K-8K', '> 8K'],

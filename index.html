@@ -241,34 +241,56 @@
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Map Section -->
-            <div class="map-card" id="map-section">
-              <div class="map-card__header">
-                <h3 class="map-card__title">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
-                    <line x1="9" x2="9" y1="3" y2="18" />
-                    <line x1="15" x2="15" y1="6" y2="21" />
-                  </svg>
-                  Carte de France
-                </h3>
-                <div class="map-card__controls">
-                  <select id="map-metric" class="select__input"
-                    style="width: auto; padding: var(--space-2) var(--space-3); font-size: var(--text-xs);">
-                    <option value="density">Nombre d'élus</option>
-                    <option value="parity">Parité</option>
-                    <option value="age">Âge moyen</option>
-                  </select>
+              <!-- Rankings Grid (Hidden by default) -->
+              <div class="charts-grid" id="rankings-view" style="display: none;">
+                <!-- Parity Ranking -->
+                <div class="chart-card">
+                  <div class="chart-card__header">
+                    <h3 class="chart-card__title">Parité par département</h3>
+                  </div>
+                  <div class="chart-card__body" style="overflow-y: auto; max-height: 300px;">
+                    <div id="ranking-parity">Chargement...</div>
+                  </div>
+                </div>
+
+                <!-- Age Ranking -->
+                <div class="chart-card">
+                  <div class="chart-card__header">
+                    <h3 class="chart-card__title">Âge moyen par département</h3>
+                  </div>
+                  <div class="chart-card__body" style="overflow-y: auto; max-height: 300px;">
+                    <div id="ranking-age">Chargement...</div>
+                  </div>
                 </div>
               </div>
-              <div class="map-card__body">
-                <div id="map"></div>
-                <div id="map-legend"></div>
+
+              <!-- Map Section -->
+              <div class="map-card" id="map-section">
+                <div class="map-card__header">
+                  <h3 class="map-card__title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                      <line x1="9" x2="9" y1="3" y2="18" />
+                      <line x1="15" x2="15" y1="6" y2="21" />
+                    </svg>
+                    Carte de France
+                  </h3>
+                  <div class="map-card__controls">
+                    <select id="map-metric" class="select__input"
+                      style="width: auto; padding: var(--space-2) var(--space-3); font-size: var(--text-xs);">
+                      <option value="density">Nombre d'élus</option>
+                      <option value="parity">Parité</option>
+                      <option value="age">Âge moyen</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="map-card__body">
+                  <div id="map"></div>
+                  <div id="map-legend"></div>
+                </div>
               </div>
-            </div>
           </section>
 
           <!-- Filters Panel -->
@@ -435,7 +457,7 @@
         <br>
         Données fournies par l'<a href="https://api.bref.chanutgirardi.com/api-docs" target="_blank">API BREF</a>
         <br>
-        <small style="color: var(--color-text-muted);">Projet de doctorat en Sciences de l'Information</small>
+
       </p>
     </footer>
   </div>

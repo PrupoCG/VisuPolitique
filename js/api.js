@@ -135,9 +135,16 @@ export const StatsAPI = {
 
   /**
    * Get political map data with dominant nuance per department
+   * Returns full response with colorLegend and data
    */
   async getPoliticalMapData() {
-    return apiFetch('/api/stats/political-map');
+    const response = await fetch(`${API_BASE}/api/stats/political-map`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!response.ok) throw new Error('Failed to fetch political map');
+    const result = await response.json();
+    // Return full object with data and colorLegend
+    return { data: result.data, colorLegend: result.colorLegend };
   }
 };
 

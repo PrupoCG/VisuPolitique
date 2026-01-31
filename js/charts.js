@@ -188,41 +188,64 @@ export function createNuancesChart(ctx, data) {
 }
 
 /**
- * Create a horizontal bar chart for mandate types
+ * Create a polar area chart for mandate types
  */
 export function createMandatesChart(ctx, data) {
     // data should be array of { type: 'Maire', count: 123 }
     const sorted = [...data].sort((a, b) => (b.count || b.total) - (a.count || a.total));
-    const labels = sorted.map(d => truncateLabel(d.type || d.label, 25));
-    const values = sorted.map(d => d.count || d.total || d.value);
+    // Take top 6 to keep it readable
+    const top = sorted.slice(0, 6);
+    const labels = top.map(d => truncateLabel(d.type || d.label, 18));
+    const values = top.map(d => d.count || d.total || d.value);
 
     return new Chart(ctx, {
-        type: 'bar',
+        type: 'polarArea',
         data: {
             labels,
             datasets: [{
-                label: 'Mandats',
                 data: values,
-                backgroundColor: COLORS.palette.slice(0, data.length),
-                borderRadius: 4,
-                borderSkipped: false
+                backgroundColor: [
+                    'rgba(67, 97, 238, 0.8)',
+                    'rgba(114, 9, 183, 0.8)',
+                    'rgba(247, 37, 133, 0.8)',
+                    'rgba(76, 201, 240, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)'
+                ],
+                borderColor: '#ffffff',
+                borderWidth: 2
             }]
         },
         options: {
-            ...defaultOptions,
-            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: {
-                ...defaultOptions.plugins,
-                legend: { display: false }
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: '#475569',
+                        font: { family: "'Inter', sans-serif", size: 10 },
+                        padding: 8,
+                        usePointStyle: true,
+                        boxWidth: 8
+                    }
+                },
+                tooltip: {
+                    ...defaultOptions.plugins.tooltip,
+                    callbacks: {
+                        label: function (context) {
+                            const value = context.raw;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percent = ((value / total) * 100).toFixed(1);
+                            return `${context.label}: ${value.toLocaleString('fr-FR')} (${percent}%)`;
+                        }
+                    }
+                }
             },
             scales: {
-                x: {
-                    ...defaultOptions.scales.x,
-                    beginAtZero: true
-                },
-                y: {
-                    ...defaultOptions.scales.y,
-                    grid: { display: false }
+                r: {
+                    display: false
                 }
             }
         }

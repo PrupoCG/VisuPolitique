@@ -147,12 +147,12 @@ async function loadOverviewStats() {
 
             const avgAge = totalCount > 0 ? Math.round(totalWeighted / totalCount) : 62;
             const avgAgeEl = document.getElementById('kpi-avg-age');
-            if (avgAgeEl) avgAgeEl.textContent = `~${avgAge} ans`;
+            if (avgAgeEl) avgAgeEl.textContent = `~${avgAge}`;
         }
     } catch (e) {
         console.warn('Could not calculate average age:', e);
         const avgAgeEl = document.getElementById('kpi-avg-age');
-        if (avgAgeEl) avgAgeEl.textContent = '~62 ans';
+        if (avgAgeEl) avgAgeEl.textContent = '~62';
     }
 
     // Update progress bars with percentages

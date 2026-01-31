@@ -369,6 +369,78 @@ async function initializeMap() {
             });
         }
 
+        // Geolocation button
+        const geoBtn = document.getElementById('btn-geolocation');
+        if (geoBtn) {
+            geoBtn.addEventListener('click', () => {
+                if (!navigator.geolocation) {
+                    alert('La géolocalisation n\'est pas supportée par votre navigateur.');
+                    return;
+                }
+
+                geoBtn.disabled = true;
+                geoBtn.textContent = 'Recherche...';
+
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+
+                        // Find department from coordinates using reverse geocoding
+                        try {
+                            const response = await fetch(
+                                `https://api-adresse.data.gouv.fr/reverse/?lat=${latitude}&lon=${longitude}`
+                            );
+                            const data = await response.json();
+
+                            if (data.features && data.features.length > 0) {
+                                const props = data.features[0].properties;
+                                const deptCode = props.postcode?.substring(0, 2) || props.citycode?.substring(0, 2);
+
+                                if (deptCode) {
+                                    // Zoom to department
+                                    const { zoomToDepartment, getMap } = await import('./map.js');
+                                    zoomToDepartment(deptCode);
+
+                                    // Also add a marker for user position
+                                    const map = getMap();
+                                    if (map) {
+                                        L.marker([latitude, longitude])
+                                            .addTo(map)
+                                            .bindPopup('📍 Vous êtes ici')
+                                            .openPopup();
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Reverse geocoding failed:', e);
+                        }
+
+                        geoBtn.disabled = false;
+                        geoBtn.innerHTML = `
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                              <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+                              <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+                            </svg>
+                            Ma position`;
+                    },
+                    (error) => {
+                        console.error('Geolocation error:', error);
+                        alert('Impossible de récupérer votre position. Vérifiez les permissions.');
+                        geoBtn.disabled = false;
+                        geoBtn.innerHTML = `
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                              <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+                              <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+                            </svg>
+                            Ma position`;
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+
     } catch (error) {
         console.error('Error initializing map:', error);
     }

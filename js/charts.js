@@ -188,33 +188,41 @@ export function createNuancesChart(ctx, data) {
 }
 
 /**
- * Create a donut chart for mandate types
+ * Create a horizontal bar chart for mandate types
  */
 export function createMandatesChart(ctx, data) {
     // data should be array of { type: 'Maire', count: 123 }
-    const labels = data.map(d => d.type || d.label);
-    const values = data.map(d => d.count || d.total || d.value);
+    const sorted = [...data].sort((a, b) => (b.count || b.total) - (a.count || a.total));
+    const labels = sorted.map(d => truncateLabel(d.type || d.label, 25));
+    const values = sorted.map(d => d.count || d.total || d.value);
 
     return new Chart(ctx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels,
             datasets: [{
+                label: 'Mandats',
                 data: values,
                 backgroundColor: COLORS.palette.slice(0, data.length),
-                borderColor: '#ffffff',
-                borderWidth: 2,
-                hoverOffset: 6
+                borderRadius: 4,
+                borderSkipped: false
             }]
         },
         options: {
             ...defaultOptions,
-            cutout: '55%',
+            indexAxis: 'y',
             plugins: {
                 ...defaultOptions.plugins,
-                legend: {
-                    ...defaultOptions.plugins.legend,
-                    position: 'right'
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    ...defaultOptions.scales.x,
+                    beginAtZero: true
+                },
+                y: {
+                    ...defaultOptions.scales.y,
+                    grid: { display: false }
                 }
             }
         }

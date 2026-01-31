@@ -278,13 +278,26 @@
                   </svg>
                   Carte de France
                 </h3>
-                <div class="map-card__controls">
+                <div class="map-card__controls" style="display: flex; gap: 8px; align-items: center;">
                   <select id="map-metric" class="select__input"
                     style="width: auto; padding: var(--space-2) var(--space-3); font-size: var(--text-xs);">
                     <option value="density">Nombre d'élus</option>
                     <option value="parity">Parité</option>
                     <option value="age">Âge moyen</option>
                   </select>
+                  <button id="btn-geolocation" class="btn btn--secondary"
+                    style="padding: 6px 12px; font-size: var(--text-xs); display: flex; align-items: center; gap: 4px;"
+                    title="Trouver mon département">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <circle cx="12" cy="12" r="3" />
+                      <line x1="12" y1="2" x2="12" y2="6" />
+                      <line x1="12" y1="18" x2="12" y2="22" />
+                      <line x1="2" y1="12" x2="6" y2="12" />
+                      <line x1="18" y1="12" x2="22" y2="12" />
+                    </svg>
+                    Ma position
+                  </button>
                 </div>
               </div>
               <div class="map-card__body">

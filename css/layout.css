@@ -79,6 +79,16 @@
     color: var(--color-accent-primary);
 }
 
+.nav__link--highlight {
+    background: var(--color-accent-gradient);
+    color: white !important;
+}
+
+.nav__link--highlight:hover {
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+}
+
 /* === Search Bar === */
 .search {
     position: relative;

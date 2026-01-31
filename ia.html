@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BREF Dashboard - Assistant IA</title>
+    <meta name="description" content="Assistant IA pour explorer les données des élus français">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+
+    <style>
+        .ia-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--space-6);
+            min-height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ia-header {
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .ia-header h1 {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            background: var(--color-accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-2);
+        }
+
+        .ia-header p {
+            color: var(--color-text-secondary);
+        }
+
+        .api-key-banner {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+            display: flex;
+            gap: var(--space-3);
+            align-items: center;
+        }
+
+        .api-key-banner input {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            font-size: var(--text-sm);
+        }
+
+        .api-key-banner.hidden {
+            display: none;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            min-height: 400px;
+            max-height: 60vh;
+        }
+
+        .chat-message {
+            max-width: 85%;
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius-lg);
+            font-size: var(--text-sm);
+            line-height: 1.6;
+        }
+
+        .chat-message--user {
+            align-self: flex-end;
+            background: var(--color-accent-gradient);
+            color: white;
+        }
+
+        .chat-message--ai {
+            align-self: flex-start;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+        }
+
+        .chat-message--ai .chart-container {
+            margin-top: var(--space-3);
+            background: var(--color-bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--space-3);
+        }
+
+        .chat-message--ai table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: var(--space-3);
+            font-size: var(--text-xs);
+        }
+
+        .chat-message--ai th,
+        .chat-message--ai td {
+            padding: var(--space-2);
+            border-bottom: 1px solid var(--color-border);
+            text-align: left;
+        }
+
+        .chat-message--ai th {
+            background: var(--color-bg-tertiary);
+            font-weight: var(--font-semibold);
+        }
+
+        .chat-message--loading {
+            display: flex;
+            gap: var(--space-2);
+            align-items: center;
+        }
+
+        .chat-message--loading .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent-primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .chat-message--loading .dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .chat-message--loading .dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        .chat-input-container {
+            padding: var(--space-4);
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            background: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+            font-size: var(--text-sm);
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--color-accent-primary);
+        }
+
+        .chat-send-btn {
+            padding: var(--space-3) var(--space-5);
+            background: var(--color-accent-gradient);
+            border: none;
+            border-radius: var(--radius-lg);
+            color: white;
+            font-weight: var(--font-medium);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .chat-send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+        }
+
+        .suggestion-btn {
+            padding: var(--space-2) var(--space-3);
+            background: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-full);
+            color: var(--color-text-secondary);
+            font-size: var(--text-xs);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .suggestion-btn:hover {
+            border-color: var(--color-accent-primary);
+            color: var(--color-accent-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header__inner">
+            <div class="header__brand">
+                <div>
+                    <h1 class="header__title">BREF Dashboard</h1>
+                    <p class="header__subtitle">Base des Représentants Élus de France</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="nav">
+                <a href="index.html" class="nav__link">Vue d'ensemble</a>
+                <a href="index.html#statistics" class="nav__link">Statistiques</a>
+                <a href="index.html#map" class="nav__link">Carte</a>
+                <a href="index.html#elected" class="nav__link">Élus</a>
+                <a href="ia.html" class="nav__link active nav__link--highlight">IA</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="ia-container">
+            <div class="ia-header">
+                <h1>Assistant IA BREF</h1>
+                <p>Posez vos questions sur les élus français. Je peux interroger la base de données et créer des
+                    visualisations.</p>
+            </div>
+
+            <!-- API Key Banner -->
+            <div id="api-key-banner" class="api-key-banner">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                </svg>
+                <input type="password" id="api-key-input" placeholder="Entrez votre clé API Gemini...">
+                <button class="btn btn--primary btn--sm" onclick="saveApiKey()">Enregistrer</button>
+            </div>
+
+            <!-- Chat Container -->
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message chat-message--ai">
+                        👋 Bonjour ! Je suis l'assistant IA du dashboard BREF. Je peux vous aider à explorer les données
+                        sur les élus français.
+
+                        <div class="suggestions">
+                            <button class="suggestion-btn" onclick="askSuggestion(this)">Quel département a le plus
+                                d'élus ?</button>
+                            <button class="suggestion-btn" onclick="askSuggestion(this)">Quelle est la parité globale
+                                ?</button>
+                            <button class="suggestion-btn" onclick="askSuggestion(this)">Quel est l'âge moyen des élus
+                                ?</button>
+                            <button class="suggestion-btn" onclick="askSuggestion(this)">Compare Paris et Lyon</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <textarea id="chat-input" class="chat-input" placeholder="Posez votre question..." rows="1"
+                        onkeydown="handleKeyDown(event)"></textarea>
+                    <button id="send-btn" class="chat-send-btn" onclick="sendMessage()">
+                        Envoyer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>
+            BREF Dashboard © 2024
+            <br>
+            Données fournies par l'<a href="https://api.bref.chanutgirardi.com/api-docs" target="_blank">API BREF</a>
+        </p>
+    </footer>
+
+    <script type="module">
+        const API_BASE = 'https://api.bref.chanutgirardi.com';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+        // Available API routes for the AI
+        const API_ROUTES = `
+Available BREF API Routes:
+- GET /api/stats/overview - General statistics (total individuals, mandates)
+- GET /api/stats/gender - Gender distribution
+- GET /api/stats/age - Age distribution by ranges
+- GET /api/stats/political-nuances - Political nuance distribution  
+- GET /api/stats/mandate-types - Types of mandates
+- GET /api/stats/rankings/parity - Departments ranked by female percentage
+- GET /api/stats/rankings/age - Departments ranked by average age
+- GET /api/stats/heat-map - Heat map data per department (electedCount, femalePercentage, averageAge)
+- GET /api/stats/political-map - Political map with dominant nuance per department
+- GET /api/elected/search?name=X - Search elected by name
+- GET /api/elected/advanced-search?gender=M/F&minAge=X&maxAge=X&nuance=X&limit=X - Advanced search
+- GET /api/location/department/:code - Get department details
+`;
+
+        const SYSTEM_PROMPT = `Tu es un assistant IA spécialisé dans l'analyse des données des élus français.
+Tu as accès à l'API BREF qui contient des données sur plus de 500 000 élus en France.
+
+${API_ROUTES}
+
+Quand on te pose une question:
+1. Détermine quelle(s) route(s) API appeler
+2. Analyse les données reçues
+3. Réponds de manière claire et concise en français
+4. Si pertinent, propose de créer un tableau ou un graphique
+
+Pour afficher des données structurées, utilise le format HTML simple (tableaux, listes).
+Base URL de l'API: ${API_BASE}
+
+Réponds toujours en français. Sois concis et utile.`;
+
+        let conversationHistory = [];
+
+        // Check for stored API key
+        window.onload = function () {
+            const storedKey = localStorage.getItem('gemini_api_key');
+            if (storedKey) {
+                document.getElementById('api-key-banner').classList.add('hidden');
+            }
+        };
+
+        window.saveApiKey = function () {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                document.getElementById('api-key-banner').classList.add('hidden');
+                addMessage('Clé API enregistrée ! Vous pouvez maintenant poser vos questions.', 'ai');
+            }
+        };
+
+        window.askSuggestion = function (btn) {
+            document.getElementById('chat-input').value = btn.textContent;
+            sendMessage();
+        };
+
+        window.handleKeyDown = function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        };
+
+        window.sendMessage = async function () {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                alert('Veuillez d\'abord entrer votre clé API Gemini.');
+                return;
+            }
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Show loading
+            const loadingId = addLoadingMessage();
+
+            try {
+                // First, let AI determine which API calls to make
+                const planResponse = await callGemini(apiKey, [
+                    { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
+                    { role: 'model', parts: [{ text: 'Compris ! Je suis prêt à aider avec les données BREF.' }] },
+                    { role: 'user', parts: [{ text: `Question: "${message}"\n\nRéponds avec les routes API à appeler au format JSON: {"routes": ["/api/..."]}\nSi aucune route n'est nécessaire, réponds directement à la question.` }] }
+                ]);
+
+                let apiData = {};
+
+                // Try to extract API routes from response
+                const routeMatch = planResponse.match(/\{"routes":\s*\[(.*?)\]\}/s);
+                if (routeMatch) {
+                    try {
+                        const routes = JSON.parse(routeMatch[0]).routes;
+                        // Call each API route
+                        for (const route of routes.slice(0, 3)) { // Max 3 calls
+                            try {
+                                const resp = await fetch(`${API_BASE}${route}`);
+                                const data = await resp.json();
+                                apiData[route] = data.data || data;
+                            } catch (e) {
+                                console.warn(`Failed to call ${route}:`, e);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not parse routes:', e);
+                    }
+                }
+
+                // Now get the final response with data
+                let finalPrompt = `Question de l'utilisateur: "${message}"`;
+                if (Object.keys(apiData).length > 0) {
+                    finalPrompt += `\n\nDonnées API récupérées:\n${JSON.stringify(apiData, null, 2).slice(0, 4000)}`;
+                }
+                finalPrompt += `\n\nRéponds de manière claire et concise. Utilise du HTML si tu dois afficher un tableau.`;
+
+                const finalResponse = await callGemini(apiKey, [
+                    { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
+                    { role: 'model', parts: [{ text: 'Je suis prêt à analyser les données BREF.' }] },
+                    { role: 'user', parts: [{ text: finalPrompt }] }
+                ]);
+
+                // Remove loading and add response
+                removeMessage(loadingId);
+                addMessage(finalResponse, 'ai');
+
+            } catch (error) {
+                console.error('Error:', error);
+                removeMessage(loadingId);
+                addMessage('Désolé, une erreur est survenue. Vérifiez votre clé API.', 'ai');
+            }
+        };
+
+        async function callGemini(apiKey, contents) {
+            const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents,
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 2048
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Gemini API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Pas de réponse';
+        }
+
+        function addMessage(content, type) {
+            const container = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message chat-message--${type}`;
+            messageDiv.id = `msg-${Date.now()}`;
+
+            if (type === 'ai') {
+                // Allow HTML in AI responses
+                messageDiv.innerHTML = content;
+            } else {
+                messageDiv.textContent = content;
+            }
+
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+
+            return messageDiv.id;
+        }
+
+        function addLoadingMessage() {
+            const container = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message chat-message--ai chat-message--loading';
+            messageDiv.id = `loading-${Date.now()}`;
+            messageDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+            return messageDiv.id;
+        }
+
+        function removeMessage(id) {
+            const msg = document.getElementById(id);
+            if (msg) msg.remove();
+        }
+    </script>
+</body>
+
+</html>

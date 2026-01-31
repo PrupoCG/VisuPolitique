@@ -108,12 +108,18 @@ export function createGenderChart(ctx, data) {
 }
 
 /**
- * Create a bar chart for age distribution
+ * Create a horizontal bar chart for age distribution
  */
 export function createAgeChart(ctx, data) {
     // data should be array of { tranche: '18-30', count: 123 }
     const labels = data.map(d => d.tranche || d.range || d.label);
     const values = data.map(d => d.count || d.value || d.total);
+
+    // Create gradient colors for each bar
+    const colors = values.map((_, i) => {
+        const ratio = i / (values.length - 1);
+        return `hsl(${240 + ratio * 60}, 70%, ${50 + ratio * 15}%)`;
+    });
 
     return new Chart(ctx, {
         type: 'bar',
@@ -122,25 +128,55 @@ export function createAgeChart(ctx, data) {
             datasets: [{
                 label: 'Nombre d\'élus',
                 data: values,
-                backgroundColor: createGradient(ctx, COLORS.primary, COLORS.secondary),
-                borderRadius: 6,
+                backgroundColor: colors,
+                borderRadius: 4,
                 borderSkipped: false
             }]
         },
         options: {
             ...defaultOptions,
+            indexAxis: 'y',
             plugins: {
                 ...defaultOptions.plugins,
                 legend: { display: false }
             },
             scales: {
-                ...defaultOptions.scales,
+                x: {
+                    ...defaultOptions.scales.x,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return value >= 1000 ? (value / 1000) + 'K' : value;
+                        }
+                    }
+                },
                 y: {
                     ...defaultOptions.scales.y,
-                    beginAtZero: true
+                    grid: { display: false }
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'ageLabels',
+            afterDatasetsDraw: function (chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, index) => {
+                        const value = dataset.data[index];
+                        const formatted = value >= 1000 ? Math.round(value / 1000) + 'K' : value;
+
+                        ctx.save();
+                        ctx.fillStyle = '#475569';
+                        ctx.font = '10px Inter, sans-serif';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(formatted, bar.x + 5, bar.y);
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
     });
 }
 
@@ -231,67 +267,86 @@ export function createNuancesChart(ctx, data) {
 }
 
 /**
- * Create a polar area chart for mandate types
+ * Create a horizontal bar chart for mandate types
  */
 export function createMandatesChart(ctx, data) {
     // data should be array of { type: 'Maire', count: 123 }
     const sorted = [...data].sort((a, b) => (b.count || b.total) - (a.count || a.total));
-    // Take top 6 to keep it readable
-    const top = sorted.slice(0, 6);
-    const labels = top.map(d => truncateLabel(d.type || d.label, 18));
+    // Take top 8 to keep it readable
+    const top = sorted.slice(0, 8);
+    const labels = top.map(d => truncateLabel(d.type || d.label, 20));
     const values = top.map(d => d.count || d.total || d.value);
 
+    const colors = [
+        'rgba(67, 97, 238, 0.85)',
+        'rgba(114, 9, 183, 0.85)',
+        'rgba(247, 37, 133, 0.85)',
+        'rgba(76, 201, 240, 0.85)',
+        'rgba(16, 185, 129, 0.85)',
+        'rgba(245, 158, 11, 0.85)',
+        'rgba(99, 102, 241, 0.85)',
+        'rgba(236, 72, 153, 0.85)'
+    ];
+
     return new Chart(ctx, {
-        type: 'polarArea',
+        type: 'bar',
         data: {
             labels,
             datasets: [{
+                label: 'Mandats',
                 data: values,
-                backgroundColor: [
-                    'rgba(67, 97, 238, 0.8)',
-                    'rgba(114, 9, 183, 0.8)',
-                    'rgba(247, 37, 133, 0.8)',
-                    'rgba(76, 201, 240, 0.8)',
-                    'rgba(16, 185, 129, 0.8)',
-                    'rgba(245, 158, 11, 0.8)'
-                ],
-                borderColor: '#ffffff',
-                borderWidth: 2
+                backgroundColor: colors.slice(0, top.length),
+                borderRadius: 4,
+                borderSkipped: false
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            ...defaultOptions,
+            indexAxis: 'y',
             plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        color: '#475569',
-                        font: { family: "'Inter', sans-serif", size: 10 },
-                        padding: 8,
-                        usePointStyle: true,
-                        boxWidth: 8
-                    }
-                },
-                tooltip: {
-                    ...defaultOptions.plugins.tooltip,
-                    callbacks: {
-                        label: function (context) {
-                            const value = context.raw;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percent = ((value / total) * 100).toFixed(1);
-                            return `${context.label}: ${value.toLocaleString('fr-FR')} (${percent}%)`;
-                        }
-                    }
-                }
+                ...defaultOptions.plugins,
+                legend: { display: false }
             },
             scales: {
-                r: {
-                    display: false
+                x: {
+                    ...defaultOptions.scales.x,
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return value >= 1000 ? (value / 1000) + 'K' : value;
+                        }
+                    }
+                },
+                y: {
+                    ...defaultOptions.scales.y,
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 9 }
+                    }
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'mandateLabels',
+            afterDatasetsDraw: function (chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, index) => {
+                        const value = dataset.data[index];
+                        const formatted = value >= 1000 ? Math.round(value / 1000) + 'K' : value;
+
+                        ctx.save();
+                        ctx.fillStyle = '#475569';
+                        ctx.font = '9px Inter, sans-serif';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(formatted, bar.x + 4, bar.y);
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
     });
 }
 

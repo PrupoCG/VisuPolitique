@@ -171,19 +171,62 @@ export function createNuancesChart(ctx, data) {
             indexAxis: 'y',
             plugins: {
                 ...defaultOptions.plugins,
-                legend: { display: false }
+                legend: { display: false },
+                // Custom plugin to display values on bars
+                tooltip: {
+                    ...defaultOptions.plugins.tooltip,
+                    callbacks: {
+                        label: function (context) {
+                            return context.raw.toLocaleString('fr-FR') + ' élus';
+                        }
+                    }
+                }
             },
             scales: {
                 x: {
                     ...defaultOptions.scales.x,
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        ...defaultOptions.scales.x.ticks,
+                        callback: function (value) {
+                            return value >= 1000 ? (value / 1000) + 'K' : value;
+                        }
+                    }
                 },
                 y: {
                     ...defaultOptions.scales.y,
-                    grid: { display: false }
+                    grid: { display: false },
+                    ticks: {
+                        ...defaultOptions.scales.y.ticks,
+                        font: { size: 10 }
+                    }
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'datalabels',
+            afterDatasetsDraw: function (chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, index) => {
+                        const value = dataset.data[index];
+                        const formatted = value >= 1000 ? Math.round(value / 1000) + 'K' : value;
+
+                        ctx.save();
+                        ctx.fillStyle = '#475569';
+                        ctx.font = '10px Inter, sans-serif';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+
+                        const x = bar.x + 5;
+                        const y = bar.y;
+                        ctx.fillText(formatted, x, y);
+                        ctx.restore();
+                    });
+                });
+            }
+        }]
     });
 }
 

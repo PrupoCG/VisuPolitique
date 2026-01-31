@@ -460,7 +460,7 @@ Réponds toujours en français. Sois concis et utile.`;
             } catch (error) {
                 console.error('Error:', error);
                 removeMessage(loadingId);
-                addMessage('Désolé, une erreur est survenue. Vérifiez votre clé API.', 'ai');
+                addMessage(`❌ Erreur: ${error.message}`, 'ai');
             }
         };
 
@@ -478,7 +478,9 @@ Réponds toujours en français. Sois concis et utile.`;
             });
 
             if (!response.ok) {
-                throw new Error(`Gemini API error: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Gemini API Error:', response.status, errorData);
+                throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
             }
 
             const data = await response.json();

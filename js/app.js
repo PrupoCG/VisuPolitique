@@ -351,7 +351,7 @@ async function initializeMap() {
         // Add legend
         const legendContainer = document.getElementById('map-legend');
         if (legendContainer) {
-            legendContainer.innerHTML = createMapLegend('parity');
+            legendContainer.innerHTML = createMapLegend('density');
         }
 
         // Listen for metric change

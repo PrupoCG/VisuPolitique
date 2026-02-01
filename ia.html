@@ -548,26 +548,39 @@ ${API_ROUTES}
 
                 let apiData = {};
 
+                let routes = [];
                 // Clean up response if it contains markdown code blocks
                 const cleanJson = planResponse.replace(/```json/g, '').replace(/```/g, '').trim();
 
-                // Try to extract API routes from response
-                const routeMatch = cleanJson.match(/\{"routes":\s*\[(.*?)\]\}/s);
-                if (routeMatch) {
-                    try {
-                        const routes = JSON.parse(routeMatch[0]).routes;
-                        // Call each API route
-                        for (const route of routes.slice(0, 12)) { // Max 12 calls (pour les régions)
-                            try {
-                                const resp = await fetch(`${API_BASE}${route}`);
-                                const data = await resp.json();
-                                apiData[route] = data.data || data;
-                            } catch (e) {
-                                console.warn(`Failed to call ${route}:`, e);
-                            }
+                try {
+                    // Try parsing the whole response first
+                    const parsed = JSON.parse(cleanJson);
+                    if (parsed.routes) routes = parsed.routes;
+                } catch (e) {
+                    console.warn('Direct JSON parse failed, trying regex...', e);
+                    // Fallback regex attempt
+                    const routeMatch = cleanJson.match(/\{"routes":\s*\[(.*?)\]\}/s);
+                    if (routeMatch) {
+                        try {
+                            // Reconstruct valid JSON string by adding closing brace if needed
+                            const jsonStr = routeMatch[0] + (routeMatch[0].endsWith('}') ? '' : '}');
+                            routes = JSON.parse(jsonStr).routes;
+                        } catch (e2) {
+                            console.error('Regex JSON parse failed:', e2);
                         }
-                    } catch (e) {
-                        console.warn('Could not parse routes:', e);
+                    }
+                }
+
+                if (routes.length > 0) {
+                    // Call each API route
+                    for (const route of routes.slice(0, 12)) { // Max 12 calls (pour les régions)
+                        try {
+                            const resp = await fetch(`${API_BASE}${route}`);
+                            const data = await resp.json();
+                            apiData[route] = data.data || data;
+                        } catch (e) {
+                            console.warn(`Failed to call ${route}:`, e);
+                        }
                     }
                 }
 

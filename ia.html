@@ -532,13 +532,19 @@ ${REGIONS_MAPPING}
 Ton SEUL but est de convertir la question de l'utilisateur en une liste de routes API.
 Renvoie UNIQUEMENT un tableau JSON de chaînes: ["url1", "url2", ...].
 
-EXEMPLE PACA (6 départements):
-["/api/elected/advanced-search?gender=M&department=04&limit=50", "/api/elected/advanced-search?gender=M&department=05&limit=50", "/api/elected/advanced-search?gender=M&department=06&limit=50", "/api/elected/advanced-search?gender=M&department=13&limit=50", "/api/elected/advanced-search?gender=M&department=83&limit=50", "/api/elected/advanced-search?gender=M&department=84&limit=50"]
+NOUVELLE FONCTIONNALITÉ (RÉGIONS) :
+Pour toute question sur une région (PACA, Bretagne, etc.), utilise la route virtuelle :
+GET /api/virtual/region/{CodeRegion}/elected
+
+Codes Région : paca, bretagne, ile-de-france, grand-est, hauts-de-france, auvergne-rhone-alpes, normandie...
+
+EXEMPLE "plus jeune homme de PACA" :
+["/api/virtual/region/paca/elected?gender=M"]
 
 RÈGLES:
-1. Analyse la question pour identifier si une région est mentionnée.
-2. Si OUI, génère une URL pour CHAQUE département de cette région.
-3. NE JAMAIS expliquer. JUSTE LE TABLEAU JSON.
+1. Si une région est citée -> utilise /api/virtual/region/...
+2. Sinon -> utilise les routes standards.
+3. JUSTE LE TABLEAU JSON.
 
 ROUTES DISPONIBLES:
 ${API_ROUTES}
@@ -572,9 +578,77 @@ ${API_ROUTES}
                     }
                 }
 
+                // ROUTE VIRTUELLE: L'IA peut utiliser /api/virtual/region/{CodeRegion}/elected pour obtenir tout une région
+                // Le code JS va intercepter et faire les N appels départements.
+                const REGION_DEPARTMENTS = {
+                    "84": ["01", "03", "07", "15", "26", "38", "42", "43", "63", "69", "73", "74"], // Auvergne-Rhône-Alpes
+                    "27": ["21", "25", "39", "58", "70", "71", "89", "90"], // Bourgogne-Franche-Comté
+                    "53": ["22", "29", "35", "56"], // Bretagne
+                    "24": ["18", "28", "36", "37", "41", "45"], // Centre-Val de Loire
+                    "94": ["2A", "2B"], // Corse
+                    "44": ["08", "10", "51", "52", "54", "55", "57", "67", "68", "88"], // Grand Est
+                    "32": ["02", "59", "60", "62", "80"], // Hauts-de-France
+                    "11": ["75", "77", "78", "91", "92", "93", "94", "95"], // Île-de-France
+                    "28": ["14", "27", "50", "61", "76"], // Normandie
+                    "75": ["16", "17", "19", "23", "24", "33", "40", "47", "64", "79", "86", "87"], // Nouvelle-Aquitaine
+                    "76": ["09", "11", "12", "30", "31", "32", "34", "46", "48", "65", "66", 81, "82"], // Occitanie
+                    "52": ["44", "49", "53", "72", "85"], // Pays de la Loire
+                    "93": ["04", "05", "06", "13", "83", "84"], // PACA
+                };
+
+                // Codes régions simplifiés pour l'IA (nom -> code)
+                const REGION_CODES = {
+                    "auvergne-rhone-alpes": "84", "bfc": "27", "bourgogne": "27",
+                    "bretagne": "53", "centre": "24", "corse": "94",
+                    "grand-est": "44", "hauts-de-france": "32", "hdf": "32",
+                    "ile-de-france": "11", "idf": "11", "paris-region": "11",
+                    "normandie": "28", "nouvelle-aquitaine": "75",
+                    "occitanie": "76", "pays-de-la-loire": "52", "pdl": "52",
+                    "paca": "93", "provence": "93", "sud": "93"
+                };
+
                 if (routes.length > 0) {
                     // Call each API route
-                    for (const route of routes.slice(0, 12)) { // Max 12 calls (pour les régions)
+                    for (const route of routes.slice(0, 15)) {
+                        // INTERCEPTION ROUTE VIRTUELLE REGION
+                        const regionMatch = route.match(/\/api\/virtual\/region\/([a-z0-9-]+)\/elected(.*)/);
+                        if (regionMatch) {
+                            const regionName = regionMatch[1].toLowerCase();
+                            const queryParams = regionMatch[2] || ""; // e.g. ?gender=M
+
+                            // Trouver le code région
+                            const regionCode = REGION_CODES[regionName] || Object.keys(REGION_CODES).find(k => k.includes(regionName));
+
+                            if (regionCode && REGION_DEPARTMENTS[regionCode]) {
+                                const depts = REGION_DEPARTMENTS[regionCode];
+                                for (const dept of depts) {
+                                    // Construit la vraie requête département
+                                    // On transforme la query virtuelle en vraie query department
+                                    // Ex: /virtual/.../elected?gender=M -> /api/location/department/04?gender=M (ou advanced search)
+                                    // Mieux: on map vers advanced-search
+
+                                    // Si queryParams contient 'department', on l'ignore car on itère.
+                                    // On force l'utilisation de advanced-search pour filtrer
+                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=20`;
+
+                                    try {
+                                        const resp = await fetch(`${API_BASE}${realUrl}`);
+                                        const data = await resp.json();
+                                        // On agrège sous la clé virtuelle pour que l'IA s'y retrouve
+                                        if (!apiData[route]) apiData[route] = [];
+                                        if (data.data) {
+                                            // Si c'est un tableau
+                                            if (Array.isArray(data.data)) apiData[route].push(...data.data);
+                                            // Si c'est un objet (paginé)
+                                            else if (data.data.results) apiData[route].push(...data.data.results);
+                                        }
+                                    } catch (e) { console.warn("Error calling dept " + dept, e); }
+                                }
+                                continue; // Passer à la route suivante (la virtuelle est traitée)
+                            }
+                        }
+
+                        // APPEL STANDARD
                         try {
                             const resp = await fetch(`${API_BASE}${route}`);
                             const data = await resp.json();

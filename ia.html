@@ -607,6 +607,28 @@ ${API_ROUTES}
                     "paca": "93", "provence": "93", "sud": "93"
                 };
 
+                // SAFETY NET: Si l'IA a oublié la route virtuelle mais que le message mentionne une région, on l'ajoute de force.
+                const userMsgLower = message.toLowerCase();
+                for (const [name, code] of Object.entries(REGION_CODES)) {
+                    // On vérifie si le nom de la région est dans le message (ex: "paca")
+                    if (userMsgLower.includes(name)) {
+                        const virtualRoute = `/api/virtual/region/${name}/elected`;
+                        // On vérifie si une route similaire n'est pas déjà présente
+                        const alreadyExists = routes.some(r => r.includes(`/api/virtual/region/${name}`));
+
+                        if (!alreadyExists) {
+                            console.log(`[Auto-Fix] Ajout forcé de la région ${name} détectée dans la question.`);
+                            // On essaie de deviner des filtres basiques (homme/femme) pour affiner
+                            let suffix = "";
+                            if (userMsgLower.includes("homme") || userMsgLower.includes("masculin")) suffix = "?gender=M";
+                            else if (userMsgLower.includes("femme") || userMsgLower.includes("féminin")) suffix = "?gender=F";
+
+                            routes.push(virtualRoute + suffix);
+                        }
+                        break; // Une seule région à la fois pour éviter le chaos
+                    }
+                }
+
                 if (routes.length > 0) {
                     // Call each API route
                     for (const route of routes.slice(0, 15)) {

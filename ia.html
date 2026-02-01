@@ -349,16 +349,35 @@ Tu as accès à l'API BREF qui contient des données sur plus de 500 000 élus e
 
 ${API_ROUTES}
 
-Quand on te pose une question:
-1. Détermine quelle(s) route(s) API appeler
-2. Analyse les données reçues
-3. Réponds de manière claire et concise en français
-4. Si pertinent, propose de créer un tableau ou un graphique
+STRATÉGIE DE RÉPONSE:
 
-Pour afficher des données structurées, utilise le format HTML simple (tableaux, listes).
+1. **Analyse de la question**: Détermine si une route API directe peut répondre, ou si tu dois combiner plusieurs sources.
+
+2. **Décomposition intelligente**: Si aucune route ne correspond exactement à la question:
+   - Identifie les sous-questions nécessaires
+   - Détermine quelles routes peuvent fournir les données partielles
+   - Planifie comment combiner/calculer les résultats
+
+3. **Exemples de décomposition**:
+   - "Compare Paris et Lyon" → Appeler /api/location/department/75 ET /api/location/department/69, puis comparer
+   - "Quel est le taux de féminisation par région ?" → Utiliser /api/stats/rankings/parity et regrouper par région
+   - "Évolution de l'âge moyen ?" → Utiliser /api/stats/age pour les tranches, calculer la moyenne pondérée
+   - "Top 3 départements avec le plus de cumul ?" → Utiliser /api/stats/heat-map et trier par electedCount
+
+4. **Calculs possibles**:
+   - Moyennes, médianes, pourcentages
+   - Comparaisons entre entités (départements, régions)
+   - Agrégations (sommes, regroupements)
+   - Classements et tris
+
+5. **Format de réponse**:
+   - Réponds de manière claire et concise en français
+   - Utilise du HTML pour les tableaux et listes structurées
+   - Explique brièvement ta méthode de calcul si pertinent
+
 Base URL de l'API: ${API_BASE}
 
-Réponds toujours en français. Sois concis et utile.`;
+IMPORTANT: Même si une route exacte n'existe pas, essaie toujours de répondre en combinant les données disponibles. Ne dis jamais "je ne peux pas" sans avoir exploré les possibilités de calcul.`;
 
         let conversationHistory = [];
 

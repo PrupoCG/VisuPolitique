@@ -525,11 +525,25 @@ IMPORTANT: Même si une route exacte n'existe pas, DÉCOMPOSE TOUJOURS la questi
             const loadingId = addLoadingMessage();
 
             try {
-                // First, let AI determine which API calls to make
+                // PLANIFICATION: On utilise un prompt spécifique très strict pour obtenir le JSON
+                const PLAN_PROMPT = `Tu es un moteur de planification API.
+${REGIONS_MAPPING}
+
+Ton SEUL but est de convertir la question de l'utilisateur en une liste de routes API à appeler.
+Renvoie UNIQUEMENT un JSON valide: {"routes": ["url1", "url2", ...]}.
+
+RÈGLES CRITIQUES:
+1. Pour une région (ex: PACA, Bretagne), tu DOIS générer une requête par département (voir liste ci-dessus).
+2. Exemple PACA: {"routes": ["/api/elected/advanced-search?gender=M&department=04&limit=50", "/api/elected/advanced-search?gender=M&department=05&limit=50", ...]}
+3. NE JAMAIS discuter, NE JAMAIS expliquer. JUSTE LE JSON.
+
+ROUTES DISPONIBLES:
+${API_ROUTES}
+`;
+
                 const planResponse = await callGemini(apiKey, [
-                    { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-                    { role: 'model', parts: [{ text: 'Compris ! Je suis prêt à aider avec les données BREF. Pour les questions régionales, je décomposerai en appelant chaque département.' }] },
-                    { role: 'user', parts: [{ text: `Question: "${message}"\n\nINSTRUCTIONS IMPORTANTES:\n1. Réponds UNIQUEMENT avec un JSON au format: {"routes": ["/api/...", "/api/..."]}\n2. Pour une question sur une RÉGION (PACA, Bretagne, etc.), tu DOIS lister UNE ROUTE PAR DÉPARTEMENT de cette région.\n   Exemple pour PACA: {"routes": ["/api/elected/advanced-search?gender=M&department=04&limit=50", "/api/elected/advanced-search?gender=M&department=05&limit=50", "/api/elected/advanced-search?gender=M&department=06&limit=50", "/api/elected/advanced-search?gender=M&department=13&limit=50", "/api/elected/advanced-search?gender=M&department=83&limit=50", "/api/elected/advanced-search?gender=M&department=84&limit=50"]}\n3. N'ajoute AUCUN texte explicatif, UNIQUEMENT le JSON.` }] }
+                    { role: 'user', parts: [{ text: PLAN_PROMPT }] },
+                    { role: 'user', parts: [{ text: `Question: "${message}"` }] }
                 ]);
 
                 let apiData = {};

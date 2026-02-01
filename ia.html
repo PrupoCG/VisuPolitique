@@ -548,8 +548,11 @@ ${API_ROUTES}
 
                 let apiData = {};
 
+                // Clean up response if it contains markdown code blocks
+                const cleanJson = planResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+
                 // Try to extract API routes from response
-                const routeMatch = planResponse.match(/\{"routes":\s*\[(.*?)\]\}/s);
+                const routeMatch = cleanJson.match(/\{"routes":\s*\[(.*?)\]\}/s);
                 if (routeMatch) {
                     try {
                         const routes = JSON.parse(routeMatch[0]).routes;

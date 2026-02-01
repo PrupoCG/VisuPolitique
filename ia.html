@@ -406,10 +406,30 @@ ROUTES API BREF DISPONIBLES:
 - GET /api/export/stats/overview - Export JSON des stats
 `;
 
+        const REGIONS_MAPPING = `
+RÉGIONS FRANÇAISES ET LEURS DÉPARTEMENTS:
+- Auvergne-Rhône-Alpes: 01, 03, 07, 15, 26, 38, 42, 43, 63, 69, 73, 74
+- Bourgogne-Franche-Comté: 21, 25, 39, 58, 70, 71, 89, 90
+- Bretagne: 22, 29, 35, 56
+- Centre-Val de Loire: 18, 28, 36, 37, 41, 45
+- Corse: 2A, 2B
+- Grand Est: 08, 10, 51, 52, 54, 55, 57, 67, 68, 88
+- Hauts-de-France: 02, 59, 60, 62, 80
+- Île-de-France: 75, 77, 78, 91, 92, 93, 94, 95
+- Normandie: 14, 27, 50, 61, 76
+- Nouvelle-Aquitaine: 16, 17, 19, 23, 24, 33, 40, 47, 64, 79, 86, 87
+- Occitanie: 09, 11, 12, 30, 31, 32, 34, 46, 48, 65, 66, 81, 82
+- Pays de la Loire: 44, 49, 53, 72, 85
+- PACA (Provence-Alpes-Côte d'Azur): 04, 05, 06, 13, 83, 84
+- DOM-TOM: 971, 972, 973, 974, 976
+`;
+
         const SYSTEM_PROMPT = `Tu es un assistant IA spécialisé dans l'analyse des données des élus français.
 Tu as accès à l'API BREF qui contient des données sur plus de 500 000 élus en France.
 
 ${API_ROUTES}
+
+${REGIONS_MAPPING}
 
 STRATÉGIE DE RÉPONSE:
 
@@ -420,26 +440,39 @@ STRATÉGIE DE RÉPONSE:
    - Détermine quelles routes peuvent fournir les données partielles
    - Planifie comment combiner/calculer les résultats
 
-3. **Exemples de décomposition**:
-   - "Compare Paris et Lyon" → Appeler /api/location/department/75 ET /api/location/department/69, puis comparer
-   - "Quel est le taux de féminisation par région ?" → Utiliser /api/stats/rankings/parity et regrouper par région
-   - "Évolution de l'âge moyen ?" → Utiliser /api/stats/age pour les tranches, calculer la moyenne pondérée
-   - "Top 3 départements avec le plus de cumul ?" → Utiliser /api/stats/heat-map et trier par electedCount
+3. **REQUÊTES PAR RÉGION** (TRÈS IMPORTANT):
+   Pour une question sur une région (ex: PACA, Bretagne), tu DOIS:
+   - Identifier les codes départements de cette région (voir mapping ci-dessus)
+   - Appeler /api/elected/advanced-search?department=XX pour CHAQUE département
+   - Combiner tous les résultats et effectuer le calcul demandé
+   
+   Exemple "élu le plus jeune homme de PACA":
+   → PACA = départements 04, 05, 06, 13, 83, 84
+   → Appeler /api/elected/advanced-search?gender=M&department=04&limit=100
+   → Appeler /api/elected/advanced-search?gender=M&department=05&limit=100
+   → ... pour chaque département
+   → Trier tous les résultats par date de naissance et retourner le plus jeune
 
-4. **Calculs possibles**:
+4. **Exemples de décomposition**:
+   - "Compare Paris et Lyon" → /api/stats/compare?area1=75&area2=69
+   - "Stats de la région Bretagne" → Combiner les données des départements 22, 29, 35, 56
+   - "Élu le plus jeune de PACA" → Rechercher dans les 6 départements PACA, puis trier
+   - "Parité en Île-de-France" → Agréger les données des 8 départements franciliens
+
+5. **Calculs possibles**:
    - Moyennes, médianes, pourcentages
    - Comparaisons entre entités (départements, régions)
    - Agrégations (sommes, regroupements)
-   - Classements et tris
+   - Classements et tris par âge, date, etc.
 
-5. **Format de réponse**:
+6. **Format de réponse**:
    - Réponds de manière claire et concise en français
    - Utilise du HTML pour les tableaux et listes structurées
    - Explique brièvement ta méthode de calcul si pertinent
 
 Base URL de l'API: ${API_BASE}
 
-IMPORTANT: Même si une route exacte n'existe pas, essaie toujours de répondre en combinant les données disponibles. Ne dis jamais "je ne peux pas" sans avoir exploré les possibilités de calcul.`;
+IMPORTANT: Même si une route exacte n'existe pas, DÉCOMPOSE TOUJOURS la question en sous-requêtes. Ne dis JAMAIS "je ne peux pas" - trouve une solution en combinant les routes disponibles !`;
 
         let conversationHistory = [];
 
@@ -507,7 +540,7 @@ IMPORTANT: Même si une route exacte n'existe pas, essaie toujours de répondre 
                     try {
                         const routes = JSON.parse(routeMatch[0]).routes;
                         // Call each API route
-                        for (const route of routes.slice(0, 3)) { // Max 3 calls
+                        for (const route of routes.slice(0, 12)) { // Max 12 calls (pour les régions)
                             try {
                                 const resp = await fetch(`${API_BASE}${route}`);
                                 const data = await resp.json();

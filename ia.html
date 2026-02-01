@@ -645,29 +645,50 @@ ${API_ROUTES}
 
                             if (regionCode && REGION_DEPARTMENTS[regionCode]) {
                                 const depts = REGION_DEPARTMENTS[regionCode];
-                                for (const dept of depts) {
-                                    // Construit la vraie requête département
-                                    // On transforme la query virtuelle en vraie query department
-                                    // Ex: /virtual/.../elected?gender=M -> /api/location/department/04?gender=M (ou advanced search)
-                                    // Mieux: on map vers advanced-search
+                                let allRegionResults = []; // Stocke tous les élus de la région temporairement
 
-                                    // Si queryParams contient 'department', on l'ignore car on itère.
-                                    // On force l'utilisation de advanced-search pour filtrer. Limit boosté à 50.
-                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=50`;
+                                for (const dept of depts) {
+                                    // On demande BEAUCOUP de résultats (1000) pour être exhaustif
+                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=1000`;
 
                                     try {
                                         const resp = await fetch(`${API_BASE}${realUrl}`);
                                         const data = await resp.json();
-                                        // On agrège sous la clé virtuelle pour que l'IA s'y retrouve
-                                        if (!apiData[route]) apiData[route] = [];
                                         if (data.data) {
-                                            // Si c'est un tableau
-                                            if (Array.isArray(data.data)) apiData[route].push(...data.data);
-                                            // Si c'est un objet (paginé)
-                                            else if (data.data.results) apiData[route].push(...data.data.results);
+                                            const newItems = Array.isArray(data.data) ? data.data : (data.data.results || []);
+                                            allRegionResults.push(...newItems);
                                         }
                                     } catch (e) { console.warn("Error calling dept " + dept, e); }
                                 }
+
+                                // OPTIMISATION INTELLIGENTE :
+                                // On a potentiellement des milliers d'élus. L'IA ne peut pas tout lire.
+                                // On va TRIER par date de naissance (les plus récents/jeunes en premier)
+                                // et ne garder que le TOP 300 pour l'IA.
+
+                                // Tri décroissant sur date_naissance (plus grand = plus récent = plus jeune)
+                                allRegionResults.sort((a, b) => {
+                                    const dateA = new Date(a.date_naissance || a.birthDate || 0);
+                                    const dateB = new Date(b.date_naissance || b.birthDate || 0);
+                                    return dateB - dateA;
+                                });
+
+                                // On garde les 200 plus jeunes (ou plus pertinents)
+                                // On nettoie aussi l'objet pour gagner de la place
+                                const topResults = allRegionResults.slice(0, 200).map(e => ({
+                                    nom: e.nom,
+                                    prenom: e.prenom,
+                                    date_naissance: e.date_naissance,
+                                    age: e.age,
+                                    ville: e.commune || e.libelle_commune,
+                                    departement: e.code_departement,
+                                    mandat: e.libelle_fonctions || e.mandat,
+                                    nuance: e.nuance
+                                }));
+
+                                apiData[route] = topResults;
+
+                                continue; // Passer à la route suivante
                                 continue; // Passer à la route suivante (la virtuelle est traitée)
                             }
                         }

@@ -329,19 +329,81 @@
 
         // Available API routes for the AI
         const API_ROUTES = `
-Available BREF API Routes:
-- GET /api/stats/overview - General statistics (total individuals, mandates)
-- GET /api/stats/gender - Gender distribution
-- GET /api/stats/age - Age distribution by ranges
-- GET /api/stats/political-nuances - Political nuance distribution  
-- GET /api/stats/mandate-types - Types of mandates
-- GET /api/stats/rankings/parity - Departments ranked by female percentage
-- GET /api/stats/rankings/age - Departments ranked by average age
-- GET /api/stats/heat-map - Heat map data per department (electedCount, femalePercentage, averageAge)
-- GET /api/stats/political-map - Political map with dominant nuance per department
-- GET /api/elected/search?name=X - Search elected by name
-- GET /api/elected/advanced-search?gender=M/F&minAge=X&maxAge=X&nuance=X&limit=X - Advanced search
-- GET /api/location/department/:code - Get department details
+ROUTES API BREF DISPONIBLES:
+
+=== STATS - GÉNÉRALES ===
+- GET /api/stats/overview - Statistiques générales (totaux individus, mandats)
+- GET /api/stats/dashboard - Toutes les données dashboard en un appel
+- GET /api/stats/gender - Distribution par genre
+- GET /api/stats/age - Distribution par tranches d'âge
+- GET /api/stats/political-nuances - Distribution des nuances politiques
+- GET /api/stats/professions?limit=X - Distribution des professions
+- GET /api/stats/mandate-types - Types de mandats
+- GET /api/stats/cumul - Cumul des mandats
+- GET /api/stats/evolution - Évolution temporelle
+- GET /api/stats/mandate-endings - Raisons de fin de mandat
+
+=== STATS - CLASSEMENTS ===
+- GET /api/stats/rankings/parity - Départements classés par parité (% femmes)
+- GET /api/stats/rankings/age - Départements classés par âge moyen
+- GET /api/stats/compare?area1=X&area2=Y - Comparer deux territoires
+
+=== STATS - RECHERCHE AVANCÉE ===
+- GET /api/stats/cohort-analysis?startYear=X&endYear=Y - Analyse de cohortes de carrière
+- GET /api/stats/feminization-trend - Évolution féminisation depuis 1980
+- GET /api/stats/rejuvenation-trend - Évolution âge moyen depuis 1980
+- GET /api/stats/party-migration - Migrations de nuances politiques
+- GET /api/stats/cumul-evolution - Évolution du cumul des mandats
+- GET /api/stats/local-to-national - Progression carrière local→national
+- GET /api/stats/political-shifts - Élus ayant changé de nuance
+- GET /api/stats/dynasties - Dynasties politiques (même nom de famille)
+- GET /api/stats/professional-background - Professions par type de mandat
+- GET /api/stats/urban-rural - Comparaison urbain vs rural
+- GET /api/stats/cross-mandate - Combinaisons de types de mandats
+- GET /api/stats/by-region - Stats par département
+- GET /api/stats/turnover - Renouvellement par année
+- GET /api/stats/longevity - Durée moyenne des mandats
+- GET /api/stats/diversity-index - Indice de diversité par département
+- GET /api/stats/heat-map - Données pour carte (electedCount, femalePercentage, averageAge)
+- GET /api/stats/political-map - Nuance dominante par département avec couleurs
+
+=== LOCALISATION ===
+- GET /api/location/city/{codeInsee} - Élus d'une commune
+- GET /api/location/city/{codeInsee}/history - Historique des maires
+- GET /api/location/city-search?name=X - Rechercher une commune
+- GET /api/location/department/{code}?limit=X&offset=Y - Élus d'un département
+- GET /api/location/constituency/{code} - Député d'une circonscription
+- GET /api/location/gps?lat=X&lng=Y - Élus près de coordonnées GPS
+- GET /api/location/area-types - Types de territoires disponibles
+
+=== ÉLUS ===
+- GET /api/elected?limit=X&offset=Y&gender=M/F&active=true - Liste des élus
+- GET /api/elected/search?name=X - Recherche par nom
+- GET /api/elected/advanced-search?gender=X&minAge=X&maxAge=X&nuance=X&mandateType=X&profession=X&department=X - Recherche multicritères
+- GET /api/elected/{id} - Détails d'un élu
+- GET /api/elected/{id}/mandates - Mandats d'un élu
+- GET /api/elected/{id}/career - Timeline carrière politique
+- GET /api/elected/current/mayors - Maires actuels
+- GET /api/elected/current/deputies - Députés actuels
+- GET /api/elected/current/senators - Sénateurs actuels
+
+=== ÉLUS - CLASSEMENTS ===
+- GET /api/elected/youngest?limit=X - Élus les plus jeunes
+- GET /api/elected/oldest?limit=X - Élus les plus âgés
+- GET /api/elected/longest-career?limit=X - Plus longues carrières
+- GET /api/elected/newcomers?year=X&limit=X - Nouveaux élus
+- GET /api/elected/by-nuance/{nuance}?limit=X - Par nuance politique
+- GET /api/elected/by-profession/{profession}?limit=X - Par profession
+
+=== TERRITOIRES ===
+- GET /api/areas/types - Types de territoires
+- GET /api/areas/search?name=X&type=X - Rechercher un territoire
+- GET /api/areas/{id} - Détails d'un territoire
+- GET /api/areas/{id}/elected?active=true - Élus d'un territoire
+
+=== EXPORT ===
+- GET /api/export/elected?gender=X&minAge=X&maxAge=X&nuance=X&mandateType=X&active=true&limit=X - Export CSV
+- GET /api/export/stats/overview - Export JSON des stats
 `;
 
         const SYSTEM_PROMPT = `Tu es un assistant IA spécialisé dans l'analyse des données des élus français.

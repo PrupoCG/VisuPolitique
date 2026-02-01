@@ -623,9 +623,12 @@ ${API_ROUTES}
                             if (userMsgLower.includes("homme") || userMsgLower.includes("masculin")) suffix = "?gender=M";
                             else if (userMsgLower.includes("femme") || userMsgLower.includes("féminin")) suffix = "?gender=F";
 
-                            // CRITIQUE: Si on détecte une région, on SUPPRIME les autres routes génériques mal planifiées
-                            // pour forcer l'usage exclusif de la logique régionale.
                             routes = [virtualRoute + suffix];
+                            addMessage(`🔎 Détection Région: ${name.toUpperCase()} (Mode Auto-Fix activé)`, 'ai');
+                        } else {
+                            // Si la route existe déjà, on NETTOIE quand même les autres routes parasites
+                            routes = routes.filter(r => r.includes(`/api/virtual/region/`));
+                            addMessage(`🔎 Région ${name.toUpperCase()} confirmée (Purge des routes non-régionales)`, 'ai');
                         }
                         break; // Une seule région à la fois
                     }

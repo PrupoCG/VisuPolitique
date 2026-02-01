@@ -529,45 +529,46 @@ IMPORTANT: Même si une route exacte n'existe pas, DÉCOMPOSE TOUJOURS la questi
                 const PLAN_PROMPT = `Tu es un moteur de planification API.
 ${REGIONS_MAPPING}
 
-Ton SEUL but est de convertir la question de l'utilisateur en une liste de routes API à appeler.
-Renvoie UNIQUEMENT un JSON valide: {"routes": ["url1", "url2", ...]}.
+Ton SEUL but est de convertir la question de l'utilisateur en une liste de routes API.
+Renvoie UNIQUEMENT un tableau JSON de chaînes: ["url1", "url2", ...].
 
-RÈGLES CRITIQUES:
-1. Pour une région (ex: PACA, Bretagne), tu DOIS générer une requête par département (voir liste ci-dessus).
-2. Exemple PACA: {"routes": ["/api/elected/advanced-search?gender=M&department=04&limit=50", "/api/elected/advanced-search?gender=M&department=05&limit=50", ...]}
-3. NE JAMAIS discuter, NE JAMAIS expliquer. JUSTE LE JSON.
+EXEMPLE PACA (6 départements):
+["/api/elected/advanced-search?gender=M&department=04&limit=50", "/api/elected/advanced-search?gender=M&department=05&limit=50", "/api/elected/advanced-search?gender=M&department=06&limit=50", "/api/elected/advanced-search?gender=M&department=13&limit=50", "/api/elected/advanced-search?gender=M&department=83&limit=50", "/api/elected/advanced-search?gender=M&department=84&limit=50"]
+
+RÈGLES:
+1. Analyse la question pour identifier si une région est mentionnée.
+2. Si OUI, génère une URL pour CHAQUE département de cette région.
+3. NE JAMAIS expliquer. JUSTE LE TABLEAU JSON.
 
 ROUTES DISPONIBLES:
 ${API_ROUTES}
 `;
 
+                console.log("Envoi au planificateur...");
                 const planResponse = await callGemini(apiKey, [
-                    { role: 'user', parts: [{ text: PLAN_PROMPT }] },
-                    { role: 'user', parts: [{ text: `Question: "${message}"` }] }
+                    { role: 'user', parts: [{ text: PLAN_PROMPT + `\n\nQuestion à traiter: "${message}"` }] }
                 ]);
+                console.log("Réponse planificateur:", planResponse);
 
                 let apiData = {};
-
                 let routes = [];
-                // Clean up response if it contains markdown code blocks
+
+                // Clean up response
                 const cleanJson = planResponse.replace(/```json/g, '').replace(/```/g, '').trim();
 
                 try {
-                    // Try parsing the whole response first
+                    // Try parsing direct array
                     const parsed = JSON.parse(cleanJson);
-                    if (parsed.routes) routes = parsed.routes;
+                    if (Array.isArray(parsed)) routes = parsed;
+                    else if (parsed.routes) routes = parsed.routes;
                 } catch (e) {
-                    console.warn('Direct JSON parse failed, trying regex...', e);
-                    // Fallback regex attempt
-                    const routeMatch = cleanJson.match(/\{"routes":\s*\[(.*?)\]\}/s);
-                    if (routeMatch) {
+                    console.warn('JSON parse failed:', e);
+                    // Regex fallback for array
+                    const arrayMatch = cleanJson.match(/\[(.*?)\]/s);
+                    if (arrayMatch) {
                         try {
-                            // Reconstruct valid JSON string by adding closing brace if needed
-                            const jsonStr = routeMatch[0] + (routeMatch[0].endsWith('}') ? '' : '}');
-                            routes = JSON.parse(jsonStr).routes;
-                        } catch (e2) {
-                            console.error('Regex JSON parse failed:', e2);
-                        }
+                            routes = JSON.parse(arrayMatch[0]);
+                        } catch (e2) { console.error(e2); }
                     }
                 }
 

@@ -651,8 +651,8 @@ ${API_ROUTES}
                                 let allRegionResults = []; // Stocke tous les élus de la région temporairement
 
                                 for (const dept of depts) {
-                                    // On demande BEAUCOUP de résultats (10000) pour être exhaustif
-                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=10000`;
+                                    // On demande BEAUCOUP de résultats (3000) pour être exhaustif sans timeout
+                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=3000`;
 
                                     try {
                                         const resp = await fetch(`${API_BASE}${realUrl}`);
@@ -667,15 +667,17 @@ ${API_ROUTES}
                                     } catch (e) { console.warn("Error calling dept " + dept, e); }
                                 }
 
+                                console.log(`[Auto-Fix] ${allRegionResults.length} élus récupérés pour la région ${regionName}`);
+                                addMessage(`🔎 ${allRegionResults.length} élus trouvés en ${regionName.toUpperCase()}. Analyse en cours...`, 'ai');
+
                                 // OPTIMISATION INTELLIGENTE :
-                                // On a potentiellement des milliers d'élus. L'IA ne peut pas tout lire.
                                 // On va TRIER par date de naissance (les plus récents/jeunes en premier)
-                                // et ne garder que le TOP 300 pour l'IA.
 
                                 // Tri décroissant sur date_naissance (plus grand = plus récent = plus jeune)
                                 allRegionResults.sort((a, b) => {
-                                    const dateA = new Date(a.date_naissance || a.birthDate || 0);
-                                    const dateB = new Date(b.date_naissance || b.birthDate || 0);
+                                    // Sécurité : si date absente, on met une date très vieille pour le mettre à la fin
+                                    const dateA = new Date(a.date_naissance || a.birthDate || "1800-01-01");
+                                    const dateB = new Date(b.date_naissance || b.birthDate || "1800-01-01");
                                     return dateB - dateA;
                                 });
 

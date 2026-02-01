@@ -618,14 +618,16 @@ ${API_ROUTES}
 
                         if (!alreadyExists) {
                             console.log(`[Auto-Fix] Ajout forcé de la région ${name} détectée dans la question.`);
-                            // On essaie de deviner des filtres basiques (homme/femme) pour affiner
+                            // On déduit les filtres
                             let suffix = "";
                             if (userMsgLower.includes("homme") || userMsgLower.includes("masculin")) suffix = "?gender=M";
                             else if (userMsgLower.includes("femme") || userMsgLower.includes("féminin")) suffix = "?gender=F";
 
-                            routes.push(virtualRoute + suffix);
+                            // CRITIQUE: Si on détecte une région, on SUPPRIME les autres routes génériques mal planifiées
+                            // pour forcer l'usage exclusif de la logique régionale.
+                            routes = [virtualRoute + suffix];
                         }
-                        break; // Une seule région à la fois pour éviter le chaos
+                        break; // Une seule région à la fois
                     }
                 }
 
@@ -650,8 +652,8 @@ ${API_ROUTES}
                                     // Mieux: on map vers advanced-search
 
                                     // Si queryParams contient 'department', on l'ignore car on itère.
-                                    // On force l'utilisation de advanced-search pour filtrer
-                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=20`;
+                                    // On force l'utilisation de advanced-search pour filtrer. Limit boosté à 50.
+                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=50`;
 
                                     try {
                                         const resp = await fetch(`${API_BASE}${realUrl}`);

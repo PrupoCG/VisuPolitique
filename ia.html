@@ -656,7 +656,10 @@ ${API_ROUTES}
                                         const data = await resp.json();
                                         if (data.data) {
                                             const newItems = Array.isArray(data.data) ? data.data : (data.data.results || []);
-                                            allRegionResults.push(...newItems);
+                                            // DOUBLE CHECK CÔTÉ CLIENT : On filtre pour être sûr que c'est le bon département
+                                            // car l'API semble parfois renvoyer des résultats globaux
+                                            const filteredItems = newItems.filter(item => item.code_departement == dept);
+                                            allRegionResults.push(...filteredItems);
                                         }
                                     } catch (e) { console.warn("Error calling dept " + dept, e); }
                                 }
@@ -705,7 +708,7 @@ ${API_ROUTES}
                 }
 
                 // Now get the final response with data
-                let finalPrompt = `Question de l'utilisateur: "${message}"`;
+                let finalPrompt = `Question de l'utilisateur: "${message}"\n\nRappel codes régions:\n${REGIONS_MAPPING}`;
                 if (Object.keys(apiData).length > 0) {
                     finalPrompt += `\n\nDonnées API récupérées:\n${JSON.stringify(apiData, null, 2).slice(0, 100000)}`;
                 }

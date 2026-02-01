@@ -648,8 +648,8 @@ ${API_ROUTES}
                                 let allRegionResults = []; // Stocke tous les élus de la région temporairement
 
                                 for (const dept of depts) {
-                                    // On demande BEAUCOUP de résultats (1000) pour être exhaustif
-                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=1000`;
+                                    // On demande BEAUCOUP de résultats (10000) pour être exhaustif
+                                    let realUrl = `/api/elected/advanced-search${queryParams}${queryParams.includes('?') ? '&' : '?'}department=${dept}&limit=10000`;
 
                                     try {
                                         const resp = await fetch(`${API_BASE}${realUrl}`);
